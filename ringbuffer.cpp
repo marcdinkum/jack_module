@@ -123,12 +123,10 @@ unsigned long RingBuffer::push(float *data,unsigned long n)
 
   if(blockingPush){
     while((space=items_available_for_write())<n){ // blocking
-      //std::cout << "PUSH block " << n << std::endl;
       usleep(blockingNap);
     } // while
   } // if
   if(space==0) return 0;
-  //else std::cout << "PUSHED " << n << std::endl;
   unsigned long n_to_write = n<=space ? n : space; // limit
 
   const auto current_tail = tail.load();
@@ -136,8 +134,6 @@ unsigned long RingBuffer::push(float *data,unsigned long n)
     memcpy(buffer+current_tail,data,n_to_write*itemsize);
   }
   else {
-  //if(n >= 1024) std::cout << "---\n";
-  //std::cout << "PUSH wrap, pushing " << n << std::endl;
     unsigned long first_chunk=size-current_tail;
     memcpy(buffer+current_tail,data,first_chunk*itemsize);
     memcpy(buffer,data+first_chunk,(n_to_write-first_chunk)*itemsize);
@@ -156,7 +152,6 @@ unsigned long RingBuffer::pop(float *data,unsigned long n)
 
   if(blockingPop){
     while((space=items_available_for_read())<n){ // blocking
-      //std::cout << "POP block " << n << std::endl;
       usleep(blockingNap);
     } // while
   } // if
@@ -168,8 +163,6 @@ unsigned long RingBuffer::pop(float *data,unsigned long n)
     memcpy(data,buffer+current_head,n_to_read*itemsize);
   }
   else {
-  //if(n > 1024) std::cout << "\t";
-  //std::cout << "POP wrap, popping " << n << std::endl;
     unsigned long first_chunk=size-current_head;
     memcpy(data,buffer+current_head,first_chunk*itemsize);
     memcpy(data+first_chunk,buffer,(n_to_read-first_chunk)*itemsize);
