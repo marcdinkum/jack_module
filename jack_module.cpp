@@ -1,5 +1,5 @@
 /**********************************************************************
-*          Copyright (c) 2018, Hogeschool voor de Kunsten Utrecht
+*          Copyright (c) 2022, Hogeschool voor de Kunsten Utrecht
 *                      Hilversum, the Netherlands
 *                          All rights reserved
 ***********************************************************************
@@ -59,7 +59,6 @@ JackModule::JackModule()
   outputringbuffer->setBlockingNap(500); // usec
 } // JackModule()
 
-
 JackModule::JackModule(unsigned long inbufsize, unsigned long outbufsize)
 {
   inputringbuffer = new RingBuffer(inbufsize,"in"); // audio in
@@ -116,7 +115,15 @@ int JackModule::init()
 
 int JackModule::init(std::string clientName)
 {
-  if( (client=jack_client_open(clientName.c_str(),(jack_options_t)0,NULL)) == 0) {
+  /*
+   * Initialise a new client session
+   * clientName: name of this client in the JACK connection overview
+   * JackNoStartServer : do not try to start the server
+   * JackNullOption or (jack_options_t)0 to try starting the
+   *   server if it's not already running
+   */
+
+  if( (client=jack_client_open(clientName.c_str(),JackNoStartServer,NULL)) == 0) {
     std::cout << "JACK server not running ?" << std::endl;
     return 1;
   }
@@ -148,7 +155,7 @@ unsigned long JackModule::getSamplerate()
 void JackModule::autoConnect()
 {
   /*
-   * Try auto-connect our output
+   * Try to auto-connect our output
    *
    * NB: JACK considers reading from an output and sending to an input
    */
@@ -171,7 +178,7 @@ void JackModule::autoConnect()
   free(ports); // ports structure no longer needed
 
   /*
-   * Try auto-connect our input
+   * Try to auto-connect our input
    */
   if((ports = jack_get_ports(client,NULL,NULL,JackPortIsPhysical|JackPortIsOutput)) == NULL)
   {

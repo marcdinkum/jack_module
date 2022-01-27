@@ -39,7 +39,11 @@
 /*
  * With this abstraction module we don't need to know JACK's buffer size
  *   but we can independently determine our own block sizes
+ *
+ * If anachunksize > synthchunksize we force buffer overflows
+ * likewise, if anachunksize < synthchunksize we force buffer underruns
  */
+
 unsigned long anachunksize=2048;
 unsigned long synthchunksize=1024;
 

@@ -59,8 +59,8 @@
   */
 RingBuffer::RingBuffer(unsigned long size,std::string name)
 {
-  tail=0;
-  head=0;
+  tail=0; // write pointer
+  head=0; // read pointer
   this->size=size;
   itemsize=sizeof(float);
   buffer = new float [size]; // allocate storage
@@ -83,7 +83,7 @@ unsigned long RingBuffer::items_available_for_write()
 long pointerspace=(long)head.load()-(long)tail.load(); // signed
 
   if(pointerspace > 0) return pointerspace; // NB: > 0 so NOT including 0
-  else return pointerspace+size;
+  else return (unsigned long) (pointerspace+size);
 } // items_available_for_write()
 
 
@@ -92,7 +92,7 @@ unsigned long RingBuffer::items_available_for_read()
 long pointerspace=(long)tail.load()-(long)head.load(); // signed
 
   if(pointerspace >= 0) return pointerspace; // NB: >= 0 so including 0
-  else return pointerspace+size;
+  else return (unsigned long) (pointerspace+size);
 } // items_available_for_read()
 
 
@@ -119,27 +119,27 @@ void RingBuffer::setBlockingNap(unsigned long blockingNap)
  */
 unsigned long RingBuffer::push(float *data,unsigned long n)
 {
-  unsigned long space=size;
+  unsigned long space=items_available_for_write();
 
   if(blockingPush){
-    while((space=items_available_for_write())<n){ // blocking
+    // block and keep re-assessing available space
+    while((space=items_available_for_write())<n){
       usleep(blockingNap);
     } // while
   } // if
-  if(space==0) return 0;
-  unsigned long n_to_write = n<=space ? n : space; // limit
+  if(space<n) return 0; // reject partial chunks
 
   const auto current_tail = tail.load();
-  if(current_tail + n_to_write <= size){ // chunk fits without wrapping
-    memcpy(buffer+current_tail,data,n_to_write*itemsize);
+  if(current_tail + n <= (unsigned long)size){ // chunk fits without wrapping
+    memcpy(buffer+current_tail,data,n*itemsize);
   }
   else {
     unsigned long first_chunk=size-current_tail;
     memcpy(buffer+current_tail,data,first_chunk*itemsize);
-    memcpy(buffer,data+first_chunk,(n_to_write-first_chunk)*itemsize);
+    memcpy(buffer,data+first_chunk,(n-first_chunk)*itemsize);
   }
-  tail.store((current_tail+n_to_write)%size);
-  return n_to_write;
+  tail.store((current_tail+n)%size);
+  return n;
 } // push()
 
 
@@ -148,27 +148,26 @@ unsigned long RingBuffer::push(float *data,unsigned long n)
  */
 unsigned long RingBuffer::pop(float *data,unsigned long n)
 {
-  unsigned long space=size;
+  unsigned long space=items_available_for_read();
 
   if(blockingPop){
     while((space=items_available_for_read())<n){ // blocking
       usleep(blockingNap);
     } // while
   } // if
-  if(space==0) return 0;
-  unsigned long n_to_read = n<=space ? n : space; // limit
+  if(space<n) return 0; // reject partial chunks
 
   const auto current_head = head.load();
-  if(current_head + n_to_read <= size){ // no wrapping necessary
-    memcpy(data,buffer+current_head,n_to_read*itemsize);
+  if(current_head + n <= (unsigned long)size){ // no wrapping necessary
+    memcpy(data,buffer+current_head,n*itemsize);
   }
   else {
     unsigned long first_chunk=size-current_head;
     memcpy(data,buffer+current_head,first_chunk*itemsize);
-    memcpy(data+first_chunk,buffer,(n_to_read-first_chunk)*itemsize);
+    memcpy(data+first_chunk,buffer,(n-first_chunk)*itemsize);
   }
-  head.store((current_head+n_to_read)%size);
-  return n_to_read;
+  head.store((current_head+n)%size);
+  return n;
 } // pop()
 
 

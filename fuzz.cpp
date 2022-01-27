@@ -49,7 +49,7 @@ unsigned long samplerate=44100; // default
 
 #define MINTHRESHOLD 0.1
 #define MAXTHRESHOLD 1.0
-jack_default_audio_sample_t threshold=0.3;
+jack_default_audio_sample_t threshold=0.2;
 
 
 

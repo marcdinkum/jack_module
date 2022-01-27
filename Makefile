@@ -6,16 +6,19 @@ LDFLAGS= -lpthread -ljack
 
 
 JACKOBJ = ringbuffer.o jack_module.o jack_test.o
-FXOBJ = ringbuffer.o jack_module.o
+FXOBJ = ringbuffer.o jack_module.o keypress.o
 RINGBUFOBJ = ringbuffer.o ringbuffer_test.o
 HOPOBJ = hopbuffer.o hopbuffer_test.o
 ATOMICOBJ = atomic_test.o
 
-all: ringbuffer_test jack_test atomic_test flanger fuzz echo delay
+all: ringbuffer_test jack_test amp atomic_test flanger fuzz echo delay
 
 
 jack_test: $(JACKOBJ)
 	$(CPP) -o $@ $(CFLAGS) $(JACKOBJ) $(LDFLAGS)
+
+amp: $(FXOBJ) amp.o
+	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) amp.o $(LDFLAGS)
 
 flanger: $(FXOBJ) flanger.o
 	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) flanger.o $(LDFLAGS)
