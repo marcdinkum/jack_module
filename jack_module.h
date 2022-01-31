@@ -34,6 +34,9 @@
 #include <jack/jack.h>
 #include "ringbuffer.h"
 
+#define MAXINPUTCHANNELS 2
+#define MAXOUTPUTCHANNELS 2
+
 
 class JackModule
 {
@@ -41,6 +44,8 @@ public:
   JackModule();
   JackModule(unsigned long inbufsize, unsigned long outbufsize);
   ~JackModule();
+  int setNumberOfInputChannels(int n);
+  int setNumberOfOutputChannels(int n);
   int init();
   int init(std::string clientName);
   unsigned long getSamplerate();
@@ -50,7 +55,14 @@ public:
   void end();
 private:
   static int _wrap_jack_process_cb(jack_nframes_t nframes,void *arg);
+  jack_port_t **input_port;
+  jack_port_t **output_port;
+  jack_default_audio_sample_t **inputbuffer;
+  jack_default_audio_sample_t **outputbuffer;
+  jack_default_audio_sample_t tempbuffer[10000]; // FIXME get actual size
   int onProcess(jack_nframes_t nframes);
+  int numberOfInputChannels=2;
+  int numberOfOutputChannels=2;
   jack_client_t *client;
   const char **ports;
   RingBuffer *inputringbuffer; // jack writes into
