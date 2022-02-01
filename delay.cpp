@@ -1,5 +1,5 @@
 /**********************************************************************
-*          Copyright (c) 2018, Hogeschool voor de Kunsten Utrecht
+*          Copyright (c) 2022, Hogeschool voor de Kunsten Utrecht
 *                      Hilversum, the Netherlands
 *                          All rights reserved
 ***********************************************************************

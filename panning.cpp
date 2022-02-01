@@ -106,8 +106,7 @@ char command='@';
 
   while(command != 'q')
   {
-  if(keypressed())
-    {
+    if(keypressed()) {
       command = getchar();
       /*
        * '+' increases the panning rate with 10%
@@ -119,7 +118,6 @@ char command='@';
       if(command == '+' || command == '=') panFreq *= 1.1;
       if(command == '-') panFreq *= 0.9;
       std::cout << "Panning frequency: " << panFreq << std::endl;
-      if(command == 'q') break; // break from loop and exit program
     }
     usleep(100000);
   }

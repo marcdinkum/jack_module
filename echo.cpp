@@ -1,5 +1,5 @@
 /**********************************************************************
-*          Copyright (c) 2018, Hogeschool voor de Kunsten Utrecht
+*          Copyright (c) 2022, Hogeschool voor de Kunsten Utrecht
 *                      Hilversum, the Netherlands
 *                          All rights reserved
 ***********************************************************************
@@ -52,10 +52,11 @@ unsigned long samplerate=44100; // default
  */
 #define MAXDELAY 20000
 
-jack_default_audio_sample_t delayline[MAXDELAY];
+jack_default_audio_sample_t delayline[MAXDELAY+1]; // one extra location!
 unsigned long delay=MAXDELAY;
 unsigned long delay_index=0;
 
+bool running=true;
 
 
 /*
@@ -72,15 +73,15 @@ float *outbuffer = new float[chunksize];
     jack.readSamples(inbuffer,chunksize);
     for(unsigned int x=0; x<chunksize; x++)
     {
-      outbuffer[x]=inbuffer[x]/2;
+      outbuffer[x]=0.7*inbuffer[x];
       outbuffer[x]+=delayline[delay_index];
-      outbuffer[x]/=2;
+      outbuffer[x]*=0.7;
       delayline[delay_index]=outbuffer[x];
       delay_index++;
       delay_index%=delay;
     }
     jack.writeSamples(outbuffer,chunksize);
-  } while(true);
+  } while(running);
 
 } // filter()
 
@@ -96,13 +97,17 @@ int main(int argc,char **argv)
   std::cerr << "Samplerate: " << samplerate << std::endl;
 
   std::thread filterThread(filter);
+  std::cerr << "Delay set to " << delay << std::endl;
 
-  while(true)
+  while(running)
   {
     std::string delayLengthString;
     std::cin >> delayLengthString;
+    if(delayLengthString == "quit"){
+      running=false;
+    }
     unsigned long delayLength = atoi(delayLengthString.c_str());
-    if(delayLength < MAXDELAY && delayLength >= 1){
+    if(delayLength <= MAXDELAY && delayLength >= 1){
       delay=delayLength;
       std::cerr << "Delay set to " << delay << std::endl;
     }
