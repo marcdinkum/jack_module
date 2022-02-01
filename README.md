@@ -2,7 +2,18 @@
 
 C++ wrapper for JACK audio, containg lock free ringbuffers and some examples
 
-Usage:
+JACK Audio Connection Kit (or JACK) is a professional sound server API and
+pair of daemon implementations to provide real-time, low-latency
+connections for both audio and MIDI data between applications.
+
+https://jackaudio.org
+
+JACK provides a C API based on a callback model. This jack_module wrapper
+offers a C++ class and hides the callback mechanism behind easy-to-use
+read and write calls.
+
+
+## Usage:
 
     include jack_module.h
 
@@ -12,7 +23,7 @@ Create a jack object:
     JackModule jack;
 
 Optionally indicate the number of inputs and outputs. If you don't specify
-them, the default is mono: 1 input and 1 output.
+them, the default is stereo: 2 inputs and 2 outputs.
 
     jack.setNumberOfInputChannels(2);
     jack.setNumberOfOutputChannels(2);
