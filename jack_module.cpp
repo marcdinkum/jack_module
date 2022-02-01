@@ -250,47 +250,51 @@ unsigned long JackModule::getSamplerate()
 
 void JackModule::autoConnect()
 {
-  /*
-   * NB: JACK considers reading from an output and sending to an input
-   */
+  autoConnect("system","system");
+} // autoConnect()
 
+
+void JackModule::autoConnect(std::string inputClient, std::string outputClient)
+{
   /*
-   * Try to auto-connect our output to the input of another client
+   * Try to auto-connect our input to the output of another client, so we
+   * regard this as an input from our perspective
    */
-  if((ports = jack_get_ports(client,"system",NULL,JackPortIsInput)) == NULL)
+  if((ports = jack_get_ports(client,inputClient.c_str(),NULL,JackPortIsOutput)) == NULL)
   {
-    std::cout << "Cannot find any physical output ports" << std::endl;
+    std::cout << "Cannot find any capture ports" << std::endl;
     exit(1);
   }
 
-  if(jack_connect(client,jack_port_name(output_port[0]),ports[0]))
-  {
-    std::cout << "Cannot connect output ports" << std::endl;
-  }
-
-  if(jack_connect(client,jack_port_name(output_port[1]),ports[1]))
-  {
-    std::cout << "Cannot connect output ports" << std::endl;
-  }
+  for(int channel=0; channel<numberOfInputChannels; channel++){
+    if(jack_connect(client,ports[channel],jack_port_name(input_port[channel])))
+    {
+      std::cout << "Cannot connect input ports" << std::endl;
+    }
+  } // for channel
 
   free(ports); // ports structure no longer needed
 
 
   /*
-   * Try to auto-connect our input to the output of another client
+   * Try to auto-connect our output to the input of another client, so we
+   * regard this as an output from our perspective
    */
-  if((ports = jack_get_ports(client,NULL,NULL,JackPortIsPhysical|JackPortIsOutput)) == NULL)
+  if((ports = jack_get_ports(client,outputClient.c_str(),NULL,JackPortIsInput)) == NULL)
   {
-    std::cout << "Cannot find any physical capture ports" << std::endl;
+    std::cout << "Cannot find any output ports" << std::endl;
     exit(1);
   }
 
-  if(jack_connect(client,ports[0],jack_port_name(input_port[0])))
-  {
-    std::cout << "Cannot connect input ports" << std::endl;
-  }
+  for(int channel=0; channel<numberOfOutputChannels; channel++){
+    if(jack_connect(client,jack_port_name(output_port[channel]),ports[channel]))
+    {
+      std::cout << "Cannot connect output ports" << std::endl;
+    }
+  } // for channel
 
   free(ports); // ports structure no longer needed
+
 } // autoConnect()
 
 

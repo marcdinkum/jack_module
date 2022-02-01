@@ -44,15 +44,17 @@ float amp_left=0.7 * (sin(panPhase) + 1);
 float amp_right=0.7 *(-sin(panPhase) + 1);
 
 /*
- * With this abstraction module we don't need to know JACK's buffer size
- *   but we can independently determine our own block sizes
+ * With this abstraction module we don't need to know JACK's buffer size.
+ *  We can determine our own block sizes and even let the input block
+ *  size differ from the output block size.
  */
-unsigned long chunksize=128;
+unsigned long chunksize=256;
 
 
 JackModule jack;
 unsigned long samplerate=44100; // default
 
+bool running=true;
 
 
 /*
@@ -64,7 +66,7 @@ static void filter()
 {
 float *inbuffer = new float[chunksize];
 float *outbuffer = new float[chunksize*2];
-float fader=0; // panning fader
+float fader=0; // panning fader with range [-1,1]
 
   do {
     jack.readSamples(inbuffer,chunksize);
@@ -78,7 +80,7 @@ float fader=0; // panning fader
       panPhase += 2*M_PI*panFreq/samplerate;
     }
     jack.writeSamples(outbuffer,chunksize*2);
-  } while(true);
+  } while(running);
 
 } // filter()
 
@@ -93,7 +95,7 @@ char command='@';
 
   jack.init(argv[0]); // use program name as JACK client name
 
-  jack.autoConnect();
+  jack.autoConnect("MPlayer","system");
 
   samplerate=jack.getSamplerate();
   std::cerr << "Samplerate: " << samplerate << std::endl;
@@ -107,13 +109,22 @@ char command='@';
   if(keypressed())
     {
       command = getchar();
-      if(command == '+') panFreq *= 1.1;
+      /*
+       * '+' increases the panning rate with 10%
+       *     for convenience the '=' key does the same as it's the
+       *     same key without shift
+       *
+       * '-' decreases the panning rate with 10%
+       */
+      if(command == '+' || command == '=') panFreq *= 1.1;
       if(command == '-') panFreq *= 0.9;
       std::cout << "Panning frequency: " << panFreq << std::endl;
+      if(command == 'q') break; // break from loop and exit program
     }
     usleep(100000);
   }
 
+  running=false;
   filterThread.join();
 
   jack.end();

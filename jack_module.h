@@ -50,6 +50,7 @@ public:
   int init(std::string clientName);
   unsigned long getSamplerate();
   void autoConnect();
+  void autoConnect(std::string inputClient,std::string outputClient);
   unsigned long readSamples(float *,unsigned long);
   unsigned long writeSamples(float *,unsigned long);
   void end();
