@@ -12,7 +12,7 @@ HOPOBJ = hopbuffer.o hopbuffer_test.o
 ATOMICOBJ = atomic_test.o
 
 all: ringbuffer_test jack_test amp panning \
-     atomic_test flanger fuzz echo delay
+     atomic_test flanger fuzz echo delay wavetable
 
 
 jack_test: $(JACKOBJ)
@@ -30,11 +30,11 @@ flanger: $(FXOBJ) flanger.o
 fuzz: $(FXOBJ) fuzz.o
 	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) fuzz.o $(LDFLAGS)
 
-echo: $(FXOBJ) echo.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) echo.o $(LDFLAGS)
-
 delay: $(FXOBJ) delay.o
 	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) delay.o $(LDFLAGS)
+
+wavetable: $(FXOBJ) wavetable.o
+	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) wavetable.o $(LDFLAGS)
 
 ringbuffer_test: $(RINGBUFOBJ)
 	$(CPP) -o $@ $(CFLAGS) $(RINGBUFOBJ) $(LDFLAGS)
