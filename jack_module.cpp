@@ -87,7 +87,7 @@ int JackModule::init()
 int JackModule::init(std::string clientName)
 {
   /*
-   * Initialise a new client session and create the needed input and
+   * Initialise a new client session and create the requested input and
    * output ports without connecting them.
    *
    * clientName: name of this client in the JACK connection overview
@@ -259,20 +259,51 @@ void JackModule::autoConnect(std::string inputClient, std::string outputClient)
   /*
    * Try to auto-connect our input to the output of another client, so we
    * regard this as an input from our perspective
+   *
+   * To prevent connecting to nonexistent ports, two measures are taken:
+   *  1. if no capture or output ports are found, the internal number
+   *     of channels is set to 0
+   *  2. if the internal number of channels is higher than the number of
+   *  ports they are supposed to connect to, overflow wraps back. E.g. when
+   *  connecting 3 input channels to 2 source ports, this will look like
+   *
+   *  src1 ---> ch 1
+   *  src2 ---> ch 2
+   *   src1 \-> ch 3
+   *
+   * Likewise, when the source has only one output port:
+   *  src1 ---> ch 1
+   *       \--> ch 2
+   *        \-> ch 3
    */
 
   if(numberOfInputChannels > 0){
-    if((ports = jack_get_ports(client,inputClient.c_str(),NULL,JackPortIsOutput)) == NULL)
-    {
-      std::cout << "Cannot find any capture ports" << std::endl;
-      exit(1);
-    }
+    ports = jack_get_ports(client,inputClient.c_str(),NULL,JackPortIsOutput);
+    if(ports == NULL) {
+      std::cout << "Cannot find capture ports associated with " << inputClient <<
+                   ", trying 'system'." << std::endl;
+      // try "system"
+      ports = jack_get_ports(client,"system",NULL,JackPortIsOutput);
+      if(ports == NULL){
+        std::cout << "Cannot find system capture ports. Continuing without inputs." << std::endl;
+	// both attempts failed, continue without capture ports
+        numberOfInputChannels=0;
+      } // if fallback not found
+    } // if specified not found
 
+    // find out the number of (not-null) ports on the source client
+    int nrofinputports=0;
+    while(ports[nrofinputports]) ++nrofinputports;
+    std::cout << "Source client has " << nrofinputports << " ports " << std::endl;
+
+    int inputportindex=0;
     for(int channel=0; channel<numberOfInputChannels; channel++){
-      if(jack_connect(client,ports[channel],jack_port_name(input_port[channel])))
-      {
+      std::cout << "connect input channel " << channel << std::endl;
+      if(jack_connect(client,ports[inputportindex],jack_port_name(input_port[channel]))) {
 	std::cout << "Cannot connect input ports" << std::endl;
       }
+      ++inputportindex;
+      if(nrofinputports>0) inputportindex %= nrofinputports;
     } // for channel
 
     free(ports); // ports structure no longer needed
@@ -283,17 +314,33 @@ void JackModule::autoConnect(std::string inputClient, std::string outputClient)
    * regard this as an output from our perspective
    */
   if(numberOfOutputChannels > 0){
-    if((ports = jack_get_ports(client,outputClient.c_str(),NULL,JackPortIsInput)) == NULL)
-    {
-      std::cout << "Cannot find any output ports" << std::endl;
-      exit(1);
-    }
+    ports = jack_get_ports(client,outputClient.c_str(),NULL,JackPortIsInput);
+    if(ports == NULL) {
+      std::cout << "Cannot find output ports associated with " << outputClient <<
+                   ", trying 'system'." << std::endl;
+      // try "system"
+      ports = jack_get_ports(client,"system",NULL,JackPortIsInput);
+      if(ports == NULL) {
+        std::cout << "Cannot find system output ports. Continuing without outputs." << std::endl;
+	// both attempts failed, continue without output port
+        numberOfOutputChannels=0;
+      } // if fallback not found
+    } // if specified not found
 
+    // find out the number of (not-null) ports on the sink client
+    int nrofoutputports=0;
+    while(ports[nrofoutputports]) ++nrofoutputports;
+    std::cout << "Sink client has " << nrofoutputports << " ports " << std::endl;
+
+    int outputportindex=0;
     for(int channel=0; channel<numberOfOutputChannels; channel++){
-      if(jack_connect(client,jack_port_name(output_port[channel]),ports[channel]))
+      std::cout << "connect output channel " << channel << std::endl;
+      if(jack_connect(client,jack_port_name(output_port[outputportindex]),ports[channel]))
       {
 	std::cout << "Cannot connect output ports" << std::endl;
       }
+      ++outputportindex;
+      if(nrofoutputports>0) outputportindex %= nrofoutputports;
     } // for channel
 
     free(ports); // ports structure no longer needed
