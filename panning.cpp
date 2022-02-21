@@ -38,10 +38,10 @@
 #include "jack_module.h"
 #include "keypress.h"
 
-float panFreq=1.0;
+float panFreq=1.0; // LFO frequency
 double panPhase=0; // start in the center
-float amp_left=0.7 * (sin(panPhase) + 1);
-float amp_right=0.7 *(-sin(panPhase) + 1);
+float amp_left=0.5 * (sin(panPhase) + 1);
+float amp_right=0.5 *(-sin(panPhase) + 1);
 
 /*
  * With this abstraction module we don't need to know JACK's buffer size.
@@ -73,8 +73,8 @@ float fader=0; // panning fader with range [-1,1]
     for(unsigned int x=0; x<chunksize; x++)
     {
       fader = sin(panPhase);
-      amp_left=0.7 * (fader + 1);
-      amp_right=0.7 *(-fader + 1);
+      amp_left=0.5 * (fader + 1);
+      amp_right=0.5 *(-fader + 1);
       outbuffer[2*x]= amp_left * inbuffer[x];
       outbuffer[2*x+1]= amp_right * inbuffer[x];
       panPhase += 2*M_PI*panFreq/samplerate;
@@ -95,7 +95,7 @@ char command='@';
 
   jack.init(argv[0]); // use program name as JACK client name
 
-  jack.autoConnect("MPlayer","system");
+  jack.autoConnect();
 
   samplerate=jack.getSamplerate();
   std::cerr << "Samplerate: " << samplerate << std::endl;
