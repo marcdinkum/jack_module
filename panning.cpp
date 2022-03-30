@@ -46,7 +46,9 @@ float amp_right=0.5 *(-sin(panPhase) + 1);
 /*
  * With this abstraction module we don't need to know JACK's buffer size.
  *  We can determine our own block sizes and even let the input block
- *  size differ from the output block size.
+ *  size differ from the output block size as long as the total average
+ *  input matches the total average output across the connected input- and
+ *  output-channels.
  */
 unsigned long chunksize=256;
 
@@ -81,6 +83,9 @@ float fader=0; // panning fader with range [-1,1]
     }
     jack.writeSamples(outbuffer,chunksize*2);
   } while(running);
+
+  delete [] inbuffer;
+  delete [] outbuffer;
 
 } // filter()
 
