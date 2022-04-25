@@ -1,6 +1,7 @@
 # jack_module
 
-C++ wrapper for JACK audio, containg lock free ringbuffers and some examples
+C++ wrapper for JACK audio, containg [lock free ringbuffers](ringbuffer.md)
+and some examples.
 
 JACK Audio Connection Kit (or JACK) is a professional sound server API and
 pair of daemon implementations to provide real-time, low-latency

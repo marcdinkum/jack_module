@@ -220,7 +220,7 @@ int JackModule::onProcess(jack_nframes_t nframes)
 
 
 /*
- * 
+ * Setting the number of input channels
  */
 int JackModule::setNumberOfInputChannels(int n)
 {

@@ -1,46 +1,36 @@
-# Makefile for ringbuffer
+# Makefile for jack module
 #
+
+# make install copies all necessary files to $INSTALL_DIR/lib/jack_module
+INSTALL_DIR=/usr/local/lib/jack_module
+
 CPP = g++ --std=c++11
 CFLAGS = -Wall
 LDFLAGS= -lpthread -ljack
 
-
-JACKOBJ = ringbuffer.o jack_module.o jack_test.o
-FXOBJ = ringbuffer.o jack_module.o keypress.o
 RINGBUFOBJ = ringbuffer.o ringbuffer_test.o
-HOPOBJ = hopbuffer.o hopbuffer_test.o
 ATOMICOBJ = atomic_test.o
+JACKOBJ = ringbuffer.o jack_module.o jack_test.o
 
-all: ringbuffer_test jack_test amp panning \
-     atomic_test flanger fuzz echo delay wavetable
+all: ringbuffer_test atomic_test jack_test
+
+# mkdir -p : no error if already exists & make intermediate directories
+
+install:
+	sudo mkdir -p $(INSTALL_DIR)
+	sudo cp jack_module.h jack_module.o ringbuffer.h ringbuffer.o $(INSTALL_DIR)
 
 
-jack_test: $(JACKOBJ)
-	$(CPP) -o $@ $(CFLAGS) $(JACKOBJ) $(LDFLAGS)
-
-amp: $(FXOBJ) amp.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) amp.o $(LDFLAGS)
-
-panning: $(FXOBJ) panning.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) panning.o $(LDFLAGS)
-
-flanger: $(FXOBJ) flanger.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) flanger.o $(LDFLAGS)
-
-fuzz: $(FXOBJ) fuzz.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) fuzz.o $(LDFLAGS)
-
-delay: $(FXOBJ) delay.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) delay.o $(LDFLAGS)
-
-wavetable: $(FXOBJ) wavetable.o
-	$(CPP) -o $@ $(CFLAGS) $(FXOBJ) wavetable.o $(LDFLAGS)
 
 ringbuffer_test: $(RINGBUFOBJ)
 	$(CPP) -o $@ $(CFLAGS) $(RINGBUFOBJ) $(LDFLAGS)
 
 atomic_test: $(ATOMICOBJ)
 	$(CPP) -o $@ $(CFLAGS) $(ATOMICOBJ)
+
+jack_test: $(JACKOBJ)
+	$(CPP) -o $@ $(CFLAGS) $(JACKOBJ) $(LDFLAGS)
+
 
 .cpp.o:
 	$(CPP) -c $< $(CFLAGS)

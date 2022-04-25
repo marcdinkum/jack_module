@@ -47,8 +47,6 @@
 unsigned long anachunksize=2048;
 unsigned long synthchunksize=1024;
 
-float *anabuffer = new float [anachunksize];
-float *synthbuffer = new float [synthchunksize];
 
 
 JackModule jack;
@@ -60,8 +58,9 @@ unsigned long samplerate=44100; // default
  */
 static void play(unsigned long nframes)
 {
-  unsigned nplayed=0;
-  double phase=0;
+float *synthbuffer = new float [synthchunksize];
+unsigned nplayed=0;
+double phase=0;
 
   do {
 
@@ -75,6 +74,8 @@ static void play(unsigned long nframes)
     nplayed+=synthchunksize;
   } while(nplayed < nframes);
 
+  delete [] synthbuffer;
+
 } // play()
 
 
@@ -84,7 +85,8 @@ static void play(unsigned long nframes)
  */
 static void analysis(unsigned long nframes)
 {
-  unsigned nread=0;
+float *anabuffer = new float [anachunksize];
+unsigned nread=0;
 
   do {
     jack.readSamples(anabuffer,anachunksize);
@@ -96,6 +98,8 @@ static void analysis(unsigned long nframes)
 
     nread+=anachunksize;
   } while(nread < nframes);
+
+  delete [] anabuffer;
 
 } // analysis()
 
